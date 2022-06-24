@@ -1,4 +1,4 @@
-FROM us.gcr.io/broad-dsp-gcr-public/terra-jupyter-base:latest
+FROM us.gcr.io/broad-dsp-gcr-public/terra-jupyter-base:1.0.9
 
 USER root
 
@@ -14,6 +14,8 @@ RUN LOCATION=$(curl -s https://api.github.com/repos/cerr/octave-colab/releases/l
 RUN cd /content && tar xzvf /content/octavecolab.tar.gz
 RUN chmod -R 777 /content
 
+RUN conda install -y -c conda-forge oct2py
+
 USER jupyter
 ENV OCTAVE_EXECUTABLE /content/octave/bin/octave-cli
 ENV PATH /content/octave/bin/:$PATH
@@ -23,8 +25,8 @@ RUN cd /content && git clone https://github.com/cerr/CERR.git && cd /content/CER
 EXPOSE $JUPYTER_PORT
 WORKDIR $HOME
 
-RUN conda env list
-RUN conda install -y -c conda-forge oct2py
+#RUN conda env list
+#RUN conda install -y -c conda-forge oct2py
 
 # Note: this entrypoint is provided for running Jupyter independently of Leonardo.
 # When Leonardo deploys this image onto a cluster, the entrypoint is overwritten to enable
