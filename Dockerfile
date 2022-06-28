@@ -25,6 +25,8 @@ RUN cd /content && git clone https://github.com/cerr/CERR.git && cd /content/CER
 EXPOSE $JUPYTER_PORT
 WORKDIR $HOME
 
+ENV JAVA_HOME /usr/lib/jvm/java-11-openjdk-amd64/lib/server
+
 #RUN conda env list
 #RUN conda install -y -c conda-forge oct2py
 
