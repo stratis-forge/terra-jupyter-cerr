@@ -16,6 +16,10 @@ RUN chmod -R 777 /content
 
 RUN conda install -y -c conda-forge oct2py
 
+RUN apt-get -y install plastimatch
+
+RUN cd /usr/lib/x86_64-linux-gnu/ && ln -s libhdf5_serial.so.103 libhdf5_serial.so.100
+
 USER jupyter
 ENV OCTAVE_EXECUTABLE /content/octave/bin/octave-cli
 ENV PATH /content/octave/bin/:$PATH
