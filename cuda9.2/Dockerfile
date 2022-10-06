@@ -1,0 +1,49 @@
+FROM us.gcr.io/broad-dsp-gcr-public/terra-jupyter-base:1.0.9
+
+USER root
+
+RUN apt-get update
+RUN apt-get -y install curl wget nano libgraphicsmagick++1-dev libsuitesparse-dev libqrupdate1 libreadline7 libfftw3-3 libhdf5-100 libgl1 libglu1-mesa libgl2ps1.4 \
+        libcurl4-gnutls-dev libarpack2 libopenblas-base git gnuplot libqt5gui5 libqt5core5a
+
+RUN mkdir /content
+
+RUN LOCATION=$(curl -s https://api.github.com/repos/cerr/octave-colab/releases/latest \
+| awk -F\" '/browser_download_url/ { print $4 }') && curl -L -o /content/octavecolab.tar.gz $LOCATION
+ 
+RUN cd /content && tar xzvf /content/octavecolab.tar.gz
+RUN chmod -R 777 /content
+
+RUN conda install -y -c conda-forge oct2py
+
+RUN apt-get -y install plastimatch
+
+RUN cd /usr/lib/x86_64-linux-gnu/ && ln -s libhdf5_serial.so.103 libhdf5_serial.so.100
+
+RUN mkdir /build
+RUN apt-get -y install freeglut3 freeglut3-dev libxi-dev libxmu-dev
+RUN wget https://developer.nvidia.com/compute/cuda/9.2/Prod2/local_installers/cuda_9.2.148_396.37_linux -O /build/cuda_9.2.148_396.37_linux.run && \
+	wget https://developer.nvidia.com/compute/cuda/9.2/Prod2/patches/1/cuda_9.2.148.1_linux -O /build/cuda_9.2.148.1_linux.run
+
+RUN chmod +x /build/*.run && ls -lt /build
+RUN sh /build/cuda_9.2.148_396.37_linux.run --override --silent --toolkit
+RUN sh /build/cuda_9.2.148.1_linux.run --accept-eula --silent
+
+USER jupyter
+
+ENV OCTAVE_EXECUTABLE /content/octave/bin/octave-cli
+ENV PATH /content/octave/bin/:$PATH
+
+RUN cd /content && git clone https://github.com/cerr/CERR.git && cd /content/CERR && git checkout octave_dev
+
+EXPOSE $JUPYTER_PORT 
+WORKDIR $HOME
+ 
+ENV JAVA_HOME /usr/lib/jvm/java-11-openjdk-amd64/lib/server
+ 
+#RUN conda env list RUN conda install -y -c conda-forge oct2py
+ 
+# Note: this entrypoint is provided for running Jupyter independently of Leonardo. When Leonardo deploys this 
+# image onto a cluster, the entrypoint is overwritten to enable additional setup inside the container before 
+# execution.  Jupyter execution occurs when the init-actions.sh script uses 'docker exec' to call run-jupyter.sh.
+ENTRYPOINT ["/opt/conda/bin/jupyter", "notebook"]
